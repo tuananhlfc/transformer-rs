@@ -1,4 +1,4 @@
-use candle_core::{Result, Tensor, Device, DType, D};
+use candle_core::{Result, Tensor};
 use candle_nn::{Linear, Module, VarBuilder};
 use crate::utils::scaled_dot_product_attention;
 
