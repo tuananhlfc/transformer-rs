@@ -1,11 +1,17 @@
 use candle_core::{Device, Result, Tensor};
-use candle_nn::{Dropout, Module};
+use candle_nn::{Dropout, Embedding, Module, VarBuilder};
 
 pub struct PositionalEncoding {
     pe: Tensor,
     dropout: Dropout,
     d_model: usize,
     max_seq_len: usize,
+}
+
+pub struct Embeddings {
+    word_embeddings: Embedding,
+    positional_encoding: PositionalEncoding,
+    d_model: usize,
 }
 
 impl PositionalEncoding {
@@ -83,5 +89,32 @@ impl PositionalEncoding {
 impl Module for PositionalEncoding {
     fn forward(&self, x: &Tensor) -> Result<Tensor> {
         self.forward(x)
+    }
+}
+
+impl Embeddings {
+    pub fn new(
+        vocab_size: usize,
+        d_model: usize,
+        max_seq_len: usize,
+        dropout_rate: f32,
+        device: &Device,
+        vb: VarBuilder,
+    ) -> Result<Self> {
+        let word_embeddings = candle_nn::embedding(vocab_size, d_model, vb.pp("word_embeddings"))?;
+        let positional_encoding = PositionalEncoding::new(d_model, max_seq_len, dropout_rate, device)?;
+
+        Ok(Self {
+            word_embeddings,
+            positional_encoding,
+            d_model,
+        })
+    }
+
+    pub fn forward(&self, input_ids: &Tensor) -> Result<Tensor> {
+        let embeddings = self.word_embeddings.forward(input_ids)?;
+        let scale = (self.d_model as f32).sqrt();
+        let scaled_embeddings = embeddings.mul(&Tensor::new(scale, embeddings.device())?)?;
+        self.positional_encoding.forward(&scaled_embeddings)
     }
 }
