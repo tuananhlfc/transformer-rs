@@ -3,7 +3,7 @@ use candle_nn::VarBuilder;
 use transformer_rs::model::{Transformer, TransformerConfig};
 
 fn main() -> anyhow::Result<()> {
-    let device = Device::Cpu;
+    let device = Device::cuda_if_available(0)?;
 
     // 1. Create a Transformer configuration
     let config = TransformerConfig::default();
