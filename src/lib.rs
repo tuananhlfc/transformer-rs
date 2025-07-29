@@ -1,5 +1,5 @@
 pub mod model;
-pub mod train;
+pub mod training;
 
 pub use model::Transformer;
 pub use model::TransformerConfig;
