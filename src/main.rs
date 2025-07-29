@@ -1,19 +1,22 @@
 use candle_core::{DType, Device, Tensor};
 use candle_nn::{VarBuilder, VarMap};
+
 use transformer_rs::model::{Transformer, TransformerConfig};
+use transformer_rs::training::{Trainer, TrainerConfig};
 
 fn main() -> anyhow::Result<()> {
+    // Set up the device
     let device = Device::Cpu;
-
-    // 1. Create a Transformer configuration
-    let config = TransformerConfig::default();
-
-    // 2. Create a VarBuilder to initialize the model weights
+    // Create a VarBuilder to initialize the model weights
     let varmap = VarMap::new();
     let vb = VarBuilder::from_varmap(&varmap, DType::F32, &device);
 
+    // 1. Define the Transformer configuration
+    let model_config = TransformerConfig::default();
+    let trainer_config = TrainerConfig::default();
+
     // 3. Instantiate the Transformer model
-    let model = Transformer::new(config, device.clone(), vb)?;
+    let model = Transformer::new(model_config, device.clone(), vb)?;
 
     // 4. Create dummy input data
     let src = Tensor::ones((1, 10), candle_core::DType::U32, &device)?;
