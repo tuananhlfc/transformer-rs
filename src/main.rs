@@ -1,15 +1,16 @@
-use candle_core::{Device, Tensor};
-use candle_nn::VarBuilder;
+use candle_core::{DType, Device, Tensor};
+use candle_nn::{VarBuilder, VarMap};
 use transformer_rs::model::{Transformer, TransformerConfig};
 
 fn main() -> anyhow::Result<()> {
-    let device = Device::cuda_if_available(0)?;
+    let device = Device::Cpu;
 
     // 1. Create a Transformer configuration
     let config = TransformerConfig::default();
 
     // 2. Create a VarBuilder to initialize the model weights
-    let vb = VarBuilder::zeros(candle_core::DType::F32, &device);
+    let varmap = VarMap::new();
+    let vb = VarBuilder::from_varmap(&varmap, DType::F32, &device);
 
     // 3. Instantiate the Transformer model
     let model = Transformer::new(config, device.clone(), vb)?;
