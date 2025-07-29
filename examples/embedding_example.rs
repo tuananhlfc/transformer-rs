@@ -13,7 +13,7 @@ fn main() -> Result<()> {
     let device = Device::Cpu;
 
     // Variable builder (empty for demonstration)
-    let mut varmap = VarMap::new();
+    let varmap = VarMap::new();
     let vb = VarBuilder::from_varmap(&varmap, DType::F32, &device);
 
     // Create Embeddings

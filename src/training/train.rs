@@ -1,5 +1,5 @@
 use candle_core::{Result, Tensor, Device};
-use candle_nn::{AdamW, Optimizer, VarBuilder, VarMap, Module};
+use candle_nn::{AdamW, Optimizer, VarBuilder, VarMap};
 
 use crate::model::{Transformer, TransformerConfig};
 
@@ -12,7 +12,6 @@ pub struct TrainerConfig {
 pub struct Trainer {
     model: Transformer,
     optimizer: AdamW,
-    varmap: VarMap,
     config: TrainerConfig,
     device: Device,
 }
@@ -34,7 +33,6 @@ impl Trainer {
         Ok(Self {
             model,
             optimizer,
-            varmap,
             config: trainer_config,
             device: device.clone(),
         })
