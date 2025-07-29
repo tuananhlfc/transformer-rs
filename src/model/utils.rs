@@ -46,3 +46,36 @@ pub fn scaled_dot_product_attention(
     // Apply attention to values
     attention_weights.matmul(value)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use candle_core::{Device, Result};
+
+    #[test]
+    fn test_causal_mask_general() -> Result<()> {
+        let device = Device::Cpu;
+        let seq_len = 4;
+        let mask = causal_mask(seq_len, &device)?;
+
+        // Expected mas:
+        // [[0.0, -inf, -inf, -inf],
+        //  [0.0, 0.0, -inf, -inf],
+        //  [0.0, 0.0, 0.0, -inf],
+        //  [0.0, 0.0, 0.0, 0.0]]
+
+        // Check the tensor's shape
+        assert_eq!(mask.shape().dims(), &[seq_len, seq_len]);
+
+        // Check tensor's content
+        let expected = vec![
+            vec![0.0, f32::NEG_INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY],
+            vec![0.0, 0.0, f32::NEG_INFINITY, f32::NEG_INFINITY],
+            vec![0.0, 0.0, 0.0, f32::NEG_INFINITY],
+            vec![0.0, 0.0, 0.0, 0.0],
+        ];
+        let mask_data = mask.to_vec2::<f32>()?;
+        assert_eq!(mask_data, expected, "Causal mask does not match expected values");
+        Ok(())
+    }
+}
