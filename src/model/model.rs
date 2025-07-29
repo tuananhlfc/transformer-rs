@@ -1,7 +1,12 @@
 use candle_core::{Device, Result, Tensor};
 use candle_nn::{Linear, Module, VarBuilder};
 
-use crate::{config::TransformerConfig, decoder::Decoder, embedding::Embeddings, encoder::Encoder, utils::causal_mask};
+
+use super::config::TransformerConfig;
+use super::embedding::Embeddings;
+use super::encoder::Encoder;
+use super::decoder::Decoder;
+use super::utils::causal_mask;
 
 pub struct Transformer {
     config: TransformerConfig,

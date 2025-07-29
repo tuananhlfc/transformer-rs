@@ -1,6 +1,7 @@
-use crate::utils::scaled_dot_product_attention;
 use candle_core::{Result, Tensor};
 use candle_nn::{Linear, Module, VarBuilder};
+
+use super::utils::scaled_dot_product_attention;
 
 pub struct MultiHeadAttention {
     d_model: usize,
