@@ -2,7 +2,7 @@ use candle_core::{D, Device, Result, Tensor};
 
 pub fn causal_mask(seq_len: usize, device: &Device) -> Result<Tensor> {
     let mask: Vec<_> = (0..seq_len)
-        .flat_map(|i| (0..seq_len).map(move |j| if i < j { f64::NEG_INFINITY } else { 0.0 }))
+        .flat_map(|i| (0..seq_len).map(move |j| if i < j { f32::NEG_INFINITY } else { 0.0 }))
         .collect();
     Tensor::from_vec(mask, (seq_len, seq_len), device)
 }
@@ -20,11 +20,12 @@ pub fn scaled_dot_product_attention(
 
     // QK^T / sqrt(d_k)
     let scores = query.matmul(&key.transpose(D::Minus1, D::Minus2)?)?;
-    let scaled_scores = scores.mul(&Tensor::new(scale, query.device())?)?;
+    let scale_tensor = Tensor::new(&[scale], scores.device())?;
+    let scaled_scores = scores.broadcast_mul(&scale_tensor)?;
 
     // Apply mask if provided
     let masked_scores = if let Some(mask) = mask {
-        let neg_inf = Tensor::new(-1e9f32, scaled_scores.device())?;
+        let neg_inf = Tensor::full(-1e9f32, scaled_scores.shape(), scaled_scores.device())?;
         let mask_expanded = mask.broadcast_as(scaled_scores.shape())?;
         scaled_scores.where_cond(&mask_expanded, &neg_inf)?
     } else {

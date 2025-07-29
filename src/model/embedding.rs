@@ -119,7 +119,8 @@ impl Embeddings {
     pub fn forward(&self, input_ids: &Tensor) -> Result<Tensor> {
         let embeddings = self.word_embeddings.forward(input_ids)?;
         let scale = (self.d_model as f32).sqrt();
-        let scaled_embeddings = embeddings.mul(&Tensor::new(scale, embeddings.device())?)?;
+        let scale_tensor = Tensor::new(&[scale], embeddings.device())?;
+        let scaled_embeddings = embeddings.broadcast_mul(&scale_tensor)?;
         self.positional_encoding.forward(&scaled_embeddings)
     }
 }

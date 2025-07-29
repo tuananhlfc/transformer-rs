@@ -8,3 +8,4 @@ pub mod model;
 pub mod utils;
 
 pub use model::Transformer;
+pub use config::TransformerConfig;
