@@ -1,8 +1,7 @@
 use candle_core::{Result, Tensor};
-use candle_nn::{layer_norm, LayerNorm, Module, VarBuilder};
+use candle_nn::{LayerNorm, Module, VarBuilder, layer_norm};
 
 use crate::{attention::MultiHeadAttention, feed_forward::FeedForward};
-
 
 pub struct DecoderLayer {
     self_attention: MultiHeadAttention,
@@ -22,8 +21,10 @@ impl DecoderLayer {
         layer_norm_eps: f64,
         vb: VarBuilder,
     ) -> Result<Self> {
-        let self_attention = MultiHeadAttention::new(d_model, num_heads, dropout_rate, vb.pp("self_attention"))?;
-        let cross_attention = MultiHeadAttention::new(d_model, num_heads, dropout_rate, vb.pp("cross_attention"))?;
+        let self_attention =
+            MultiHeadAttention::new(d_model, num_heads, dropout_rate, vb.pp("self_attention"))?;
+        let cross_attention =
+            MultiHeadAttention::new(d_model, num_heads, dropout_rate, vb.pp("cross_attention"))?;
         let feed_forward = FeedForward::new(d_model, d_ff, dropout_rate, vb.pp("feed_forward"))?;
         let norm1 = layer_norm(d_model, layer_norm_eps, vb.pp("norm1"))?;
         let norm2 = layer_norm(d_model, layer_norm_eps, vb.pp("norm2"))?;
@@ -52,9 +53,9 @@ impl DecoderLayer {
         let x = self.norm1.forward(&x.add(&self_attn_output)?)?;
 
         // Cross-attention
-        let cross_attn_output = self.cross_attention.forward(
-            &x, encoder_output, encoder_output, src_mask, training
-        )?;
+        let cross_attn_output =
+            self.cross_attention
+                .forward(&x, encoder_output, encoder_output, src_mask, training)?;
         let x = self.norm2.forward(&x.add(&cross_attn_output)?)?;
 
         // Feed-forward

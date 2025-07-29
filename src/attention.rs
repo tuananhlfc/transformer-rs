@@ -1,6 +1,6 @@
+use crate::utils::scaled_dot_product_attention;
 use candle_core::{Result, Tensor};
 use candle_nn::{Linear, Module, VarBuilder};
-use crate::utils::scaled_dot_product_attention;
 
 pub struct MultiHeadAttention {
     d_model: usize,
@@ -22,12 +22,12 @@ impl MultiHeadAttention {
     ) -> Result<Self> {
         if d_model % num_heads != 0 {
             return Err(candle_core::Error::Msg(
-                "d_model must be divisible by num_heads".to_string()
+                "d_model must be divisible by num_heads".to_string(),
             ));
         }
 
         let d_k = d_model / num_heads;
-        
+
         let w_q = candle_nn::linear(d_model, d_model, vb.pp("w_q"))?;
         let w_k = candle_nn::linear(d_model, d_model, vb.pp("w_k"))?;
         let w_v = candle_nn::linear(d_model, d_model, vb.pp("w_v"))?;
@@ -57,27 +57,33 @@ impl MultiHeadAttention {
         let seq_len = query.dims()[1];
 
         // Linear transformations and reshape to (batch_size, num_heads, seq_len, d_k)
-        let q = self.w_q.forward(query)?
+        let q = self
+            .w_q
+            .forward(query)?
             .reshape((batch_size, seq_len, self.num_heads, self.d_k))?
             .transpose(1, 2)?;
-        
-        let k = self.w_k.forward(key)?
+
+        let k = self
+            .w_k
+            .forward(key)?
             .reshape((batch_size, seq_len, self.num_heads, self.d_k))?
             .transpose(1, 2)?;
-        
-        let v = self.w_v.forward(value)?
+
+        let v = self
+            .w_v
+            .forward(value)?
             .reshape((batch_size, seq_len, self.num_heads, self.d_k))?
             .transpose(1, 2)?;
 
         // Apply scaled dot-product attention
-        let attention_output = scaled_dot_product_attention(
-            &q, &k, &v, mask, self.dropout_rate, training
-        )?;
+        let attention_output =
+            scaled_dot_product_attention(&q, &k, &v, mask, self.dropout_rate, training)?;
 
         // Concatenate heads and put through final linear layer
-        let concat_attention = attention_output
-            .transpose(1, 2)?
-            .reshape((batch_size, seq_len, self.d_model))?;
+        let concat_attention =
+            attention_output
+                .transpose(1, 2)?
+                .reshape((batch_size, seq_len, self.d_model))?;
 
         self.w_o.forward(&concat_attention)
     }

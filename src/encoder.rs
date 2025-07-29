@@ -1,7 +1,7 @@
-use candle_core::{Result, Tensor};
-use candle_nn::{layer_norm, LayerNorm, Module, VarBuilder};
 use crate::attention::MultiHeadAttention;
 use crate::feed_forward::FeedForward;
+use candle_core::{Result, Tensor};
+use candle_nn::{LayerNorm, Module, VarBuilder, layer_norm};
 
 pub struct EncoderLayer {
     self_attention: MultiHeadAttention,
@@ -19,7 +19,8 @@ impl EncoderLayer {
         layer_norm_eps: f64,
         vb: VarBuilder,
     ) -> Result<Self> {
-        let self_attention = MultiHeadAttention::new(d_model, num_heads, dropout_rate, vb.pp("self_attention"))?;
+        let self_attention =
+            MultiHeadAttention::new(d_model, num_heads, dropout_rate, vb.pp("self_attention"))?;
         let feed_forward = FeedForward::new(d_model, d_ff, dropout_rate, vb.pp("feed_forward"))?;
         let norm1 = layer_norm(d_model, layer_norm_eps, vb.pp("norm1"))?;
         let norm2 = layer_norm(d_model, layer_norm_eps, vb.pp("norm2"))?;

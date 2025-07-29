@@ -1,5 +1,5 @@
 use candle_core::{Result, Tensor};
-use candle_nn::{Linear, Dropout, Module, VarBuilder};
+use candle_nn::{Dropout, Linear, Module, VarBuilder};
 
 pub struct FeedForward {
     linear1: Linear,
