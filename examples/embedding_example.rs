@@ -32,5 +32,10 @@ fn main() -> Result<()> {
     println!("Embeddings output shape: {:?}", output.dims());
     println!("Embeddings output: {:?}", output);
 
+    // Print some actual values to verify they look reasonable
+    println!("First few values from output:");
+    let output_slice = output.narrow(0, 0, 1)?.narrow(1, 0, 2)?;
+    println!("{:?}", output_slice.to_vec2::<f32>()?);
+
     Ok(())
 }

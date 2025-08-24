@@ -25,9 +25,9 @@ pub fn scaled_dot_product_attention(
 
     // Apply mask if provided
     let masked_scores = if let Some(mask) = mask {
-        let neg_inf = Tensor::full(-1e9f32, scaled_scores.shape(), scaled_scores.device())?;
+        // Add mask to scores instead of using where_cond
         let mask_expanded = mask.broadcast_as(scaled_scores.shape())?;
-        scaled_scores.where_cond(&mask_expanded, &neg_inf)?
+        scaled_scores.add(&mask_expanded)?
     } else {
         scaled_scores
     };

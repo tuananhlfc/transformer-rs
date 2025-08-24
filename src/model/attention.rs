@@ -62,19 +62,22 @@ impl MultiHeadAttention {
             .w_q
             .forward(query)?
             .reshape((batch_size, seq_len, self.num_heads, self.d_k))?
-            .transpose(1, 2)?;
+            .transpose(1, 2)?
+            .contiguous()?;
 
         let k = self
             .w_k
             .forward(key)?
             .reshape((batch_size, seq_len, self.num_heads, self.d_k))?
-            .transpose(1, 2)?;
+            .transpose(1, 2)?
+            .contiguous()?;
 
         let v = self
             .w_v
             .forward(value)?
             .reshape((batch_size, seq_len, self.num_heads, self.d_k))?
-            .transpose(1, 2)?;
+            .transpose(1, 2)?
+            .contiguous()?;
 
         // Apply scaled dot-product attention
         let attention_output =
@@ -84,6 +87,7 @@ impl MultiHeadAttention {
         let concat_attention =
             attention_output
                 .transpose(1, 2)?
+                .contiguous()?
                 .reshape((batch_size, seq_len, self.d_model))?;
 
         self.w_o.forward(&concat_attention)
