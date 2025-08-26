@@ -7,7 +7,7 @@ use rand;
 
 fn main() -> candle_core::Result<()> {
     // Set up device
-    let device = Device::Cpu;
+    let device = Device::cuda_if_available(0)?;
     print!("Using device: {:?}", device);
 
     let varmap = VarMap::new();

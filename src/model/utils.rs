@@ -1,5 +1,24 @@
 use candle_core::{D, Device, Result, Tensor};
 
+/// Manual softmax implementation that works with CUDA
+/// Applies softmax along the last dimension
+fn softmax_last_dim_manual(tensor: &Tensor) -> Result<Tensor> {
+    let last_dim = tensor.dims().len() - 1;
+
+    // Subtract max for numerical stability
+    let max_vals = tensor.max_keepdim(last_dim)?;
+    let shifted = tensor.broadcast_sub(&max_vals)?;
+
+    // Compute exp
+    let exp_vals = shifted.exp()?;
+
+    // Compute sum along last dimension
+    let sum_exp = exp_vals.sum_keepdim(last_dim)?;
+
+    // Divide by sum to get probabilities
+    exp_vals.broadcast_div(&sum_exp)
+}
+
 pub fn causal_mask(seq_len: usize, device: &Device) -> Result<Tensor> {
     let mask: Vec<_> = (0..seq_len)
         .flat_map(|i| (0..seq_len).map(move |j| if i < j { f32::NEG_INFINITY } else { 0.0 }))
@@ -32,8 +51,8 @@ pub fn scaled_dot_product_attention(
         scaled_scores
     };
 
-    // Softmax
-    let attention_weights = candle_nn::ops::softmax_last_dim(&masked_scores)?;
+    // Softmax - manual implementation for CUDA compatibility
+    let attention_weights: Tensor = softmax_last_dim_manual(&masked_scores)?;
 
     // Apply dropout if training
     let attention_weights = if training && dropout_rate > 0.0 {

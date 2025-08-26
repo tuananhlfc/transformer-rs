@@ -6,3 +6,6 @@ RUN apt-get update && \
     apt-get clean
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+# Add cargo to the PATH for all users
+ENV PATH="/root/.cargo/bin:${PATH}"

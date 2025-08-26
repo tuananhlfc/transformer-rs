@@ -23,8 +23,8 @@ impl Default for TransformerConfig {
             num_decoder_layers: 6,
             d_ff: 2048,
             max_seq_len: 512,
-            src_vocab_size: 10000,
-            tgt_vocab_size: 10000,
+            src_vocab_size: 1000,
+            tgt_vocab_size: 1000,
             dropout: 0.1,
             layer_norm_eps: 1e-6,
         }
