@@ -124,3 +124,109 @@ impl Embeddings {
         self.positional_encoding.forward(&scaled_embeddings)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use candle_core::{Device, Tensor};
+
+    #[test]
+    fn test_positional_encoding_creation() -> Result<()> {
+        let device = Device::Cpu;
+        let d_model = 512;
+        let max_seq_len = 100;
+        let dropout_rate = 0.1;
+
+        // Test valid creation
+        let pe = PositionalEncoding::new(d_model, max_seq_len, dropout_rate, &device)?;
+        assert_eq!(pe.d_model, d_model);
+        assert_eq!(pe.max_seq_len, max_seq_len);
+
+        // Test invalid d_model (odd number)
+        let result = PositionalEncoding::new(511, max_seq_len, dropout_rate, &device);
+        assert!(result.is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_positional_encoding_forward() -> Result<()> {
+        let device = Device::Cpu;
+        let d_model = 64;
+        let max_seq_len = 50;
+        let dropout_rate = 0.0; // Disable dropout for deterministic check
+
+        let pe = PositionalEncoding::new(d_model, max_seq_len, dropout_rate, &device)?;
+
+        let batch_size = 2;
+        let seq_len = 10;
+        let input = Tensor::zeros(
+            (batch_size, seq_len, d_model),
+            candle_core::DType::F32,
+            &device,
+        )?;
+
+        let output = pe.forward(&input)?;
+
+        // Check output shape
+        assert_eq!(output.dims(), &[batch_size, seq_len, d_model]);
+
+        // Check values are within range [-1, 1] (since input is 0, output is just PE)
+        // PE uses sin and cos, so values should be in [-1, 1]
+        let output_vec: Vec<f32> = output.flatten_all()?.to_vec1()?;
+        for val in output_vec {
+            assert!(val >= -1.0 && val <= 1.0);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_positional_encoding_errors() -> Result<()> {
+        let device = Device::Cpu;
+        let d_model = 64;
+        let max_seq_len = 50;
+        let dropout_rate = 0.1;
+
+        let pe = PositionalEncoding::new(d_model, max_seq_len, dropout_rate, &device)?;
+
+        // Test wrong dimensions
+        let input_2d = Tensor::zeros((10, 64), candle_core::DType::F32, &device)?;
+        assert!(pe.forward(&input_2d).is_err());
+
+        // Test mismatched d_model
+        let input_wrong_dim = Tensor::zeros((2, 10, 32), candle_core::DType::F32, &device)?;
+        assert!(pe.forward(&input_wrong_dim).is_err());
+
+        // Test sequence length exceeded
+        let input_long = Tensor::zeros((2, 51, 64), candle_core::DType::F32, &device)?;
+        assert!(pe.forward(&input_long).is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_embeddings_forward() -> Result<()> {
+        let device = Device::Cpu;
+        let vocab_size = 1000;
+        let d_model = 64;
+        let max_seq_len = 50;
+        let dropout_rate = 0.1;
+
+        // Use VarBuilder with zeros for deterministic testing
+        let vb = VarBuilder::zeros(candle_core::DType::F32, &device);
+
+        let embeddings =
+            Embeddings::new(vocab_size, d_model, max_seq_len, dropout_rate, &device, vb)?;
+
+        let batch_size = 2;
+        let seq_len = 10;
+        let input_ids = Tensor::zeros((batch_size, seq_len), candle_core::DType::U32, &device)?;
+
+        let output = embeddings.forward(&input_ids)?;
+
+        assert_eq!(output.dims(), &[batch_size, seq_len, d_model]);
+
+        Ok(())
+    }
+}
