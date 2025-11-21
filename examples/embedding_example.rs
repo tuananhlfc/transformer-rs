@@ -1,4 +1,4 @@
-use candle_core::{DType, Device, Result, Tensor};
+use candle_core::{DType, Device, IndexOp, Result, Tensor};
 use candle_nn::{VarBuilder, VarMap};
 use transformer_rs::model::embedding::Embeddings;
 
@@ -34,7 +34,7 @@ fn main() -> Result<()> {
 
     // Print some actual values to verify they look reasonable
     println!("First few values from output:");
-    let output_slice = output.narrow(0, 0, 1)?.narrow(1, 0, 2)?;
+    let output_slice = output.i(0)?.narrow(0, 0, 2)?;
     println!("{:?}", output_slice.to_vec2::<f32>()?);
 
     Ok(())
